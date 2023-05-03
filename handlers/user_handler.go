@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 	"strconv"
-	"time"
 	dto "waysgallery/dto/result"
 	usersdto "waysgallery/dto/users"
 	"waysgallery/models"
@@ -44,6 +43,7 @@ func (h *handlerUser) GetUser(c echo.Context) error {
 func (h *handlerUser) UpdateUser(c echo.Context) error {
 	userLogin := c.Get("userLogin")
 	userId := userLogin.(jwt.MapClaims)["id"].(float64)
+	// id, _ := strconv.Atoi(c.Param("id"))
 
 	request := new(usersdto.UserUpdateRequest)
 	if err := c.Bind(&request); err != nil {
@@ -51,6 +51,7 @@ func (h *handlerUser) UpdateUser(c echo.Context) error {
 	}
 
 	user, err := h.UserRepository.GetUser(int(userId))
+	// user, err := h.UserRepository.GetUser(id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
 	}
@@ -66,8 +67,6 @@ func (h *handlerUser) UpdateUser(c echo.Context) error {
 	if request.Password != "" {
 		user.Password = request.Password
 	}
-
-	user.UpdatedAt = time.Now()
 
 	data, err := h.UserRepository.UpdateUser(user)
 	if err != nil {
