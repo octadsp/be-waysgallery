@@ -14,12 +14,12 @@ type Post struct {
 }
 
 type PostResponse struct {
-	ID          int          `json:"id"`
-	Title       string       `json:"title"`
-	Description string       `json:"description"`
-	Photo       string       `json:"photo"`
-	UserID      int          `json:"user_id"`
-	User        UserResponse `json:"user"`
+	ID          int                 `json:"id"`
+	Title       string              `json:"title"`
+	Description string              `json:"description"`
+	Photos       []PhotoPostResponse `json:"photos" gorm:"foreignKey:PostID"`
+	UserID      int                 `json:"user_id"`
+	User        UserResponse        `json:"user"`
 }
 
 func (PostResponse) TableName() string {

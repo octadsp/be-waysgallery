@@ -26,19 +26,19 @@ func (r *repository) FindUsers() ([]models.User, error) {
 
 func (r *repository) GetUser(ID int) (models.User, error) {
 	var user models.User
-	err := r.db.Preload("Arts").Preload("Posts").First(&user, ID).Error
+	err := r.db.Preload("Orders").Preload("Arts").Preload("Posts").First(&user, ID).Error
 
 	return user, err
 }
 
 func (r *repository) UpdateUser(user models.User) (models.User, error) {
-	err := r.db.Preload("Arts").Preload("Posts").Save(&user).Error
+	err := r.db.Preload("Orders").Preload("Arts").Preload("Posts").Save(&user).Error
 
 	return user, err
 }
 
 func (r *repository) DeleteUser(user models.User) (models.User, error) {
-	err := r.db.Preload("Arts").Preload("Posts").Delete(&user).Scan(&user).Error
+	err := r.db.Preload("Orders").Preload("Arts").Preload("Posts").Delete(&user).Scan(&user).Error
 
 	return user, err
 }
