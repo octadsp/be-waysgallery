@@ -6,4 +6,6 @@ func RouteInit(e *echo.Group) {
 	UserRoutes(e)
 	AuthRoutes(e)
 	PostRoutes(e)
+	PhotoRoutes(e)
+	OrderRoutes(e)
 }
