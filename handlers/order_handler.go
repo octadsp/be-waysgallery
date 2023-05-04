@@ -121,7 +121,7 @@ func (h *handlerOrder) UpdateOrder(c echo.Context) error {
 	return c.JSON(http.StatusOK, dto.SuccessResult{Status: http.StatusOK, Data: data})
 }
 
-func (h *handlerOrder) DeletePost(c echo.Context) error {
+func (h *handlerOrder) DeleteOrder(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 
 	order, err := h.OrderRepository.GetOrder(id)

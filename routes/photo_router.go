@@ -14,9 +14,9 @@ func PhotoRoutes(e *echo.Group) {
 
 	h := handlers.HandlerPhoto(photoRepository)
 
-	e.GET("/posts", h.FindPhotos)
-	e.GET("/post/:id", h.GetPhoto)
-	e.POST("/post", middleware.UploadImage(h.AddPhoto))
-	e.PATCH("/post/:id", middleware.UploadImage(h.UpdatePhoto))
-	e.DELETE("/post/:id", h.DeletePhoto)
+	e.GET("/photos", h.FindPhotos)
+	e.GET("/photo/:id", h.GetPhoto)
+	e.POST("/photo", middleware.UploadImage(h.AddPhoto))
+	e.PATCH("/photo/:id", middleware.UploadImage(h.UpdatePhoto))
+	e.DELETE("/photo/:id", h.DeletePhoto)
 }
