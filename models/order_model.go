@@ -9,10 +9,10 @@ type Order struct {
 	StartDate   time.Time    `json:"start_date"`
 	EndDate     time.Time    `json:"end_date"`
 	Price       int          `json:"price"`
-	OrderByID   int          `json:"order_by_id"`
-	OrderBy     UserResponse `json:"order_by"`
+	UserID      int          `json:"user_id"`
+	User        UserResponse `json:"user" gorm:"foreignKey:UserID"`
 	OrderToID   int          `json:"order_to_id"`
-	OrderTo     UserResponse `json:"order_to"`
+	OrderTo     UserResponse `json:"order_to" gorm:"foreignKey:UserID"`
 }
 
 type OrderResponse struct {
@@ -22,7 +22,9 @@ type OrderResponse struct {
 	StartDate   time.Time    `json:"start_date"`
 	EndDate     time.Time    `json:"end_date"`
 	Price       int          `json:"price"`
-	OrderBy     UserResponse `json:"order_by"`
+	UserID      int          `json:"user_id"`
+	User        UserResponse `json:"user" gorm:"foreignKey:UserID"`
+	OrderToID   int          `json:"order_to_id"`
 	OrderTo     UserResponse `json:"order_to"`
 }
 
