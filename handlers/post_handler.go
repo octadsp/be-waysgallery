@@ -9,6 +9,7 @@ import (
 	repository "waysgallery/repositories"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 )
 
@@ -52,12 +53,14 @@ func (h *handlerPost) AddPost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
 	}
 
-	user_id, _ := strconv.Atoi(c.FormValue("user_id"))
+	userLogin := c.Get("userLogin")
+	userId := userLogin.(jwt.MapClaims)["id"].(float64)
+	// user_id, _ := strconv.Atoi(c.FormValue("userId"))
 
 	post := models.Post{
 		Title:       request.Title,
 		Description: request.Description,
-		UserID:      user_id,
+		UserID:      int(userId),
 	}
 
 	data, err := h.PostRepository.AddPost(post)
@@ -77,25 +80,25 @@ func (h *handlerPost) UpdatePost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
 	}
 
-	user, err := h.PostRepository.GetPost(id)
+	post, err := h.PostRepository.GetPost(id)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
 	}
 
 	if request.Title != "" {
-		user.Title = request.Title
+		post.Title = request.Title
 	}
 
 	if request.Description != "" {
-		user.Description = request.Description
+		post.Description = request.Description
 	}
 
 	if request.UserID != 0 {
-		user.UserID = request.UserID
+		post.UserID = request.UserID
 	}
 
-	data, err := h.PostRepository.UpdatePost(user)
+	data, err := h.PostRepository.UpdatePost(post)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Status: http.StatusInternalServerError, Message: err.Error()})
 	}

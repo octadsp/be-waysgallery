@@ -9,6 +9,7 @@ import (
 	repository "waysgallery/repositories"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 )
 
@@ -53,7 +54,9 @@ func (h *handlerOrder) AddOrder(c echo.Context) error {
 	}
 
 	price, _ := strconv.Atoi(c.FormValue("price"))
-	user_id, _ := strconv.Atoi(c.FormValue("user_id"))
+	userLogin := c.Get("userLogin")
+	userId := userLogin.(jwt.MapClaims)["id"].(float64)
+	// user_id, _ := strconv.Atoi(c.FormValue("user_id"))
 	order_to_id, _ := strconv.Atoi(c.Param("order_to_id"))
 
 	order := models.Order{
@@ -62,7 +65,7 @@ func (h *handlerOrder) AddOrder(c echo.Context) error {
 		StartDate:   request.StartDate,
 		EndDate:     request.EndDate,
 		Price:       price,
-		UserID:      user_id,
+		UserID:      int(userId),
 		OrderToID:   order_to_id,
 	}
 
