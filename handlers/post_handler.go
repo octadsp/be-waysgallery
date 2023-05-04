@@ -52,10 +52,12 @@ func (h *handlerPost) AddPost(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
 	}
 
+	user_id, _ := strconv.Atoi(c.FormValue("user_id"))
+
 	post := models.Post{
 		Title:       request.Title,
 		Description: request.Description,
-		UserID:      request.UserID,
+		UserID:      user_id,
 	}
 
 	data, err := h.PostRepository.AddPost(post)

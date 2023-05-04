@@ -1,4 +1,4 @@
-package post
+package postdto
 
 type PostResponse struct {
 	ID          int          `json:"id"`
