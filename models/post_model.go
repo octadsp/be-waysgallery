@@ -17,9 +17,9 @@ type PostResponse struct {
 	ID          int                 `json:"id"`
 	Title       string              `json:"title"`
 	Description string              `json:"description"`
-	Photos       []PhotoPostResponse `json:"photos" gorm:"foreignKey:PostID"`
+	Photos      []PhotoPostResponse `json:"photos" gorm:"foreignKey:PostID"`
 	UserID      int                 `json:"user_id"`
-	User        UserResponse        `json:"user"`
+	User        UserResponse        `json:"user" gorm:"foreignKey:UserID"`
 }
 
 func (PostResponse) TableName() string {

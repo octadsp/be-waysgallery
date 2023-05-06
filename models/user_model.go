@@ -11,7 +11,7 @@ type User struct {
 	Posts    []PostResponse      `json:"posts" gorm:"foreignKey:UserID"`
 	Arts     []ArtUserResponse   `json:"arts" gorm:"foreignKey:UserID"`
 	Orders   []OrderResponse     `json:"orders" gorm:"foreignKey:UserID"`
-
+	
 	//association_jointable_foreignKey untuk menyesuaikan foreignKey asing pada table sambungan Many-to-Many antara 2 struct yang berbeda
 	Followers []*User   `gorm:"many2many:user_followers;association_jointable_foreignkey:follower_id" json:"-"`
 	Following []*User   `gorm:"many2many:user_followers;association_jointable_foreignkey:following_id" json:"-"`

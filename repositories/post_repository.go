@@ -7,7 +7,7 @@ import (
 )
 
 type PostRepository interface {
-	FindPosts() ([]models.Post, error)
+	FindPosts() ([]models.PostResponse, error)
 	GetPost(ID int) (models.Post, error)
 	AddPost(post models.Post) (models.Post, error)
 	UpdatePost(post models.Post) (models.Post, error)
@@ -18,16 +18,16 @@ func RepositoryPost(db *gorm.DB) *repository {
 	return &repository{db}
 }
 
-func (r *repository) FindPosts() ([]models.Post, error) {
-	var posts []models.Post
-	err := r.db.Preload("Photos").Find(&posts).Error
+func (r *repository) FindPosts() ([]models.PostResponse, error) {
+	var posts []models.PostResponse
+	err := r.db.Preload("Photos").Preload("User").Find(&posts).Error
 
 	return posts, err
 }
 
 func (r *repository) GetPost(ID int) (models.Post, error) {
 	var post models.Post
-	err := r.db.Preload("Photos").Preload("Users").First(&post, ID).Error
+	err := r.db.Preload("Photos").Preload("User").First(&post, ID).Error
 
 	return post, err
 }
