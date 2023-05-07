@@ -33,7 +33,7 @@ func (r *repository) GetPost(ID int) (models.Post, error) {
 }
 
 func (r *repository) AddPost(post models.Post) (models.Post, error) {
-	err := r.db.Create(&post).Error
+	err := r.db.Preload("User").Create(&post).Error
 
 	return post, err
 }

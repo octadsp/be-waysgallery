@@ -8,7 +8,7 @@ type Post struct {
 	Description string              `json:"description" form:"description" gorm:"type: varchar(255)"`
 	Photos      []PhotoPostResponse `json:"photos" gorm:"foreignKey:PostID"`
 	UserID      int                 `json:"user_id"`
-	User        UserResponse        `json:"user" gorm:"foreignKey:UserID"`
+	User        UserResponse        `json:"user"`
 	CreatedAt   time.Time           `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt   time.Time           `json:"updated_at" gorm:"autoCreateTime"`
 }

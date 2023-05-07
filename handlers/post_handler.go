@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	postdto "waysgallery/dto/post"
@@ -42,6 +43,11 @@ func (h *handlerPost) GetPost(c echo.Context) error {
 }
 
 func (h *handlerPost) AddPost(c echo.Context) error {
+	userLogin := c.Get("userLogin")
+	userId := userLogin.(jwt.MapClaims)["id"].(float64)
+
+	fmt.Println("user_id :", int(userId))
+
 	request := new(postdto.PostRequest)
 	if err := c.Bind(request); err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
@@ -52,10 +58,6 @@ func (h *handlerPost) AddPost(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
 	}
-
-	userLogin := c.Get("userLogin")
-	userId := userLogin.(jwt.MapClaims)["id"].(float64)
-	// user_id, _ := strconv.Atoi(c.FormValue("userId"))
 
 	post := models.Post{
 		Title:       request.Title,
