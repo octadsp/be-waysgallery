@@ -47,6 +47,7 @@ func (h *handlerAuth) Register(c echo.Context) error {
 		Email:    request.Email,
 		Password: password,
 		FullName: request.FullName,
+		Avatar:   "https://res.cloudinary.com/dpxazv6a6/image/upload/v1683380538/waysgallery/defaultAvatar_h3nyjx.png",
 	}
 
 	data, err := h.AuthRepository.Register(user)
