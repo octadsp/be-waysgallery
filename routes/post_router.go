@@ -19,4 +19,5 @@ func PostRoutes(e *echo.Group) {
 	e.POST("/post", middleware.Auth(h.AddPost))
 	e.PATCH("/post/:id", middleware.UploadImage(h.UpdatePost))
 	e.DELETE("/post/:id", middleware.UploadImage(h.DeletePost))
+	e.GET("/user/:userID/posts", middleware.Auth(h.GetPostByUserID))
 }

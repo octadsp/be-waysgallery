@@ -31,6 +31,19 @@ func (h *handlerPost) FindPosts(c echo.Context) error {
 	return c.JSON(http.StatusOK, dto.SuccessResult{Status: http.StatusOK, Data: posts})
 }
 
+func (h *handlerPost) GetPostByUserID(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("userID"))
+	// userLogin := c.Get("userLogin")
+	// userId := userLogin.(jwt.MapClaims)["id"].(float64)
+
+	// fmt.Println(userId)
+	posts, err := h.PostRepository.GetPostByUserID(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
+	}
+	return c.JSON(http.StatusOK, dto.SuccessResult{Status: http.StatusOK, Data: posts})
+}
+
 func (h *handlerPost) GetPost(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 

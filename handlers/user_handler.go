@@ -30,9 +30,11 @@ func (h *handlerUser) FindUsers(c echo.Context) error {
 }
 
 func (h *handlerUser) GetUser(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	// id, _ := strconv.Atoi(c.Param("id"))
+	userLogin := c.Get("userLogin")
+	userId := userLogin.(jwt.MapClaims)["id"].(float64)
 
-	user, err := h.UserRepository.GetUser(id)
+	user, err := h.UserRepository.GetUser(int(userId))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
 	}
@@ -60,12 +62,8 @@ func (h *handlerUser) UpdateUser(c echo.Context) error {
 		user.FullName = request.FullName
 	}
 
-	if request.Email != "" {
-		user.Email = request.Email
-	}
-
-	if request.Password != "" {
-		user.Password = request.Password
+	if request.Greeting != "" {
+		user.Greeting = request.Greeting
 	}
 
 	data, err := h.UserRepository.UpdateUser(user)
@@ -73,7 +71,7 @@ func (h *handlerUser) UpdateUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Status: http.StatusInternalServerError, Message: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, dto.SuccessResult{Status: http.StatusOK, Data: convertResponse(data)})
+	return c.JSON(http.StatusOK, dto.SuccessResult{Status: http.StatusOK, Data: data})
 }
 
 func (h *handlerUser) DeleteUser(c echo.Context) error {

@@ -11,6 +11,8 @@ type UserRepository interface {
 	GetUser(ID int) (models.User, error)
 	UpdateUser(user models.User) (models.User, error)
 	DeleteUser(user models.User) (models.User, error)
+
+	
 }
 
 func RepositoryUser(db *gorm.DB) *repository {

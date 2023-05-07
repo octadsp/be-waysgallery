@@ -12,6 +12,8 @@ type PostRepository interface {
 	AddPost(post models.Post) (models.Post, error)
 	UpdatePost(post models.Post) (models.Post, error)
 	DeletePost(post models.Post, ID int) (models.Post, error)
+
+	GetPostByUserID(userID int) ([]models.PostResponse, error)
 }
 
 func RepositoryPost(db *gorm.DB) *repository {
@@ -22,6 +24,12 @@ func (r *repository) FindPosts() ([]models.PostResponse, error) {
 	var posts []models.PostResponse
 	err := r.db.Preload("Photos").Preload("User").Find(&posts).Error
 
+	return posts, err
+}
+
+func (r *repository) GetPostByUserID(userID int) ([]models.PostResponse, error) {
+	var posts []models.PostResponse
+	err := r.db.Where("user_id = ?", userID).Preload("Photos").Preload("User").Find(&posts).Error
 	return posts, err
 }
 

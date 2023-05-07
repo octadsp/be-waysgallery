@@ -7,6 +7,7 @@ type User struct {
 	Email    string            `json:"email" gorm:"type: varchar(255); unique "`
 	Password string            `json:"password" gorm:"type: varchar(255)"`
 	FullName string            `json:"fullName" gorm:"type: varchar(255)"`
+	Greeting string            `json:"greeting" gorm:"type:varchar(255)"`
 	Avatar   string            `json:"image"`
 	Posts    []PostResponse    `json:"posts" gorm:"foreignKey:UserID"`
 	Arts     []ArtUserResponse `json:"arts" gorm:"foreignKey:UserID"`
@@ -20,10 +21,13 @@ type User struct {
 }
 
 type UserResponse struct {
-	ID       int    `json:"id"`
-	FullName string `json:"fullName"`
-	Email    string `json:"email"`
-	Avatar   string `json:"image"`
+	ID       int               `json:"id"`
+	FullName string            `json:"fullName"`
+	Email    string            `json:"email"`
+	Greeting string            `json:"greeting"`
+	Avatar   string            `json:"image"`
+	Posts    []PostResponse    `json:"posts" gorm:"foreignKey:UserID"`
+	Arts     []ArtUserResponse `json:"arts" gorm:"foreignKey:UserID"`
 }
 
 func (UserResponse) TableName() string {

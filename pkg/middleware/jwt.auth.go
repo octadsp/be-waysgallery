@@ -17,7 +17,7 @@ type Result struct {
 }
 
 // Buat Fungsi Auth
-// echo.HandlerFunc itu tipe data / struct pada Echo 
+// echo.HandlerFunc itu tipe data / struct pada Echo
 func Auth(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token := c.Request().Header.Get("Authorization")
