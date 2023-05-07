@@ -8,4 +8,5 @@ func RouteInit(e *echo.Group) {
 	PostRoutes(e)
 	PhotoRoutes(e)
 	OrderRoutes(e)
+	ArtRoutes(e)
 }
