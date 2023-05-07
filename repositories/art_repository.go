@@ -20,14 +20,14 @@ func RepositoryArt(db *gorm.DB) *repository {
 
 func (r *repository) FindArts() ([]models.Art, error) {
 	var arts []models.Art
-	err := r.db.Find(&arts).Error
+	err := r.db.Preload("User").Find(&arts).Error
 
 	return arts, err
 }
 
 func (r *repository) GetArt(ID int) (models.Art, error) {
 	var art models.Art
-	err := r.db.First(&art, ID).Error
+	err := r.db.Preload("User").First(&art, ID).Error
 
 	return art, err
 }
