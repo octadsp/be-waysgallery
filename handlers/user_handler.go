@@ -1,14 +1,19 @@
 package handlers
 
 import (
+	"context"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	dto "waysgallery/dto/result"
 	usersdto "waysgallery/dto/users"
 	"waysgallery/models"
 	"waysgallery/repositories"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 )
 
@@ -30,11 +35,11 @@ func (h *handlerUser) FindUsers(c echo.Context) error {
 }
 
 func (h *handlerUser) GetUser(c echo.Context) error {
-	// id, _ := strconv.Atoi(c.Param("id"))
-	userLogin := c.Get("userLogin")
-	userId := userLogin.(jwt.MapClaims)["id"].(float64)
+	id, _ := strconv.Atoi(c.Param("id"))
+	// userLogin := c.Get("userLogin")
+	// userId := userLogin.(jwt.MapClaims)["id"].(float64)
 
-	user, err := h.UserRepository.GetUser(int(userId))
+	user, err := h.UserRepository.GetUser(id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
 	}
@@ -43,16 +48,40 @@ func (h *handlerUser) GetUser(c echo.Context) error {
 }
 
 func (h *handlerUser) UpdateUser(c echo.Context) error {
-	userLogin := c.Get("userLogin")
-	userId := userLogin.(jwt.MapClaims)["id"].(float64)
-	// id, _ := strconv.Atoi(c.Param("id"))
+	// userLogin := c.Get("userLogin")
+	// userId := userLogin.(jwt.MapClaims)["id"].(float64)
+	id, _ := strconv.Atoi(c.Param("id"))
 
-	request := new(usersdto.UserUpdateRequest)
-	if err := c.Bind(&request); err != nil {
+	imageFile := c.Get("imageFile").(string)
+
+	request := usersdto.UserUpdateRequest{
+		FullName: c.FormValue("fullName"),
+		Greeting: c.FormValue("greeting"),
+		Avatar:   imageFile,
+	}
+
+	validation := validator.New()
+	err := validation.Struct(request)
+	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
 	}
 
-	user, err := h.UserRepository.GetUser(int(userId))
+	var ctx = context.Background()
+	var CLOUD_NAME = os.Getenv("CLOUD_NAME")
+	var API_KEY = os.Getenv("API_KEY")
+	var API_SECRET = os.Getenv("API_SECRET")
+
+	// Add your Cloudinary credentials ...
+	cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
+
+	// Upload file to Cloudinary ...
+	resp, err := cld.Upload.Upload(ctx, imageFile, uploader.UploadParams{Folder: "waysgallery"})
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	user, err := h.UserRepository.GetUser(id)
 	// user, err := h.UserRepository.GetUser(id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
@@ -64,6 +93,10 @@ func (h *handlerUser) UpdateUser(c echo.Context) error {
 
 	if request.Greeting != "" {
 		user.Greeting = request.Greeting
+	}
+
+	if request.Avatar != "" {
+		user.Avatar = resp.SecureURL
 	}
 
 	data, err := h.UserRepository.UpdateUser(user)

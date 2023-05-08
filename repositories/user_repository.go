@@ -11,8 +11,6 @@ type UserRepository interface {
 	GetUser(ID int) (models.User, error)
 	UpdateUser(user models.User) (models.User, error)
 	DeleteUser(user models.User) (models.User, error)
-
-	
 }
 
 func RepositoryUser(db *gorm.DB) *repository {
@@ -34,7 +32,7 @@ func (r *repository) GetUser(ID int) (models.User, error) {
 }
 
 func (r *repository) UpdateUser(user models.User) (models.User, error) {
-	err := r.db.Preload("Orders").Preload("Arts").Preload("Posts").Save(&user).Error
+	err := r.db.Save(&user).Error
 
 	return user, err
 }
