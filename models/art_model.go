@@ -15,5 +15,5 @@ type ArtUserResponse struct {
 }
 
 func (ArtUserResponse) TableName() string {
-	return "orders"
+	return "arts"
 }
