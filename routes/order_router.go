@@ -18,4 +18,6 @@ func OrderRoutes(e *echo.Group) {
 	e.POST("/order", h.AddOrder)
 	e.PATCH("/order/:id", h.UpdateOrder)
 	e.DELETE("/order/:id", h.DeleteOrder)
+
+	e.POST("/order/:byID/user/:toID", h.AddOrderByUserToUser)
 }

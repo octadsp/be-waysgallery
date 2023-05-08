@@ -78,6 +78,38 @@ func (h *handlerOrder) AddOrder(c echo.Context) error {
 	return c.JSON(http.StatusOK, dto.SuccessResult{Status: http.StatusOK, Data: data})
 }
 
+func (h *handlerOrder) AddOrderByUserToUser(c echo.Context) error {
+	request := new(orderdto.OrderRequest)
+	if err := c.Bind(request); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
+	}
+
+	validation := validator.New()
+	err := validation.Struct(request)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
+	}
+
+	price, _ := strconv.Atoi(c.FormValue("price"))
+	orderTo, _ := strconv.Atoi(c.Param("toID"))
+	orderBy, _ := strconv.Atoi(c.Param("byID"))
+
+	order := models.Order{
+		Title:       request.Title,
+		Description: request.Description,
+		StartDate:   request.StartDate,
+		EndDate:     request.EndDate,
+		Price:       price,
+	}
+	data, err := h.OrderRepository.AddOrderByUserToUser(order, orderBy, orderTo)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Status: http.StatusInternalServerError, Message: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, dto.SuccessResult{Status: http.StatusOK, Data: data})
+}
+
 func (h *handlerOrder) UpdateOrder(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 
