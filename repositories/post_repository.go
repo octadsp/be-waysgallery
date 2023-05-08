@@ -14,6 +14,7 @@ type PostRepository interface {
 	DeletePost(post models.Post, ID int) (models.Post, error)
 
 	GetPostByUserID(userID int) ([]models.PostResponse, error)
+	FilterPostsByTitle(title string) ([]models.PostResponse, error)
 }
 
 func RepositoryPost(db *gorm.DB) *repository {
@@ -23,6 +24,13 @@ func RepositoryPost(db *gorm.DB) *repository {
 func (r *repository) FindPosts() ([]models.PostResponse, error) {
 	var posts []models.PostResponse
 	err := r.db.Preload("Photos").Preload("User").Find(&posts).Error
+
+	return posts, err
+}
+
+func (r *repository) FilterPostsByTitle(title string) ([]models.PostResponse, error) {
+	var posts []models.PostResponse
+	err := r.db.Preload("Photos").Preload("User").Where("title LIKE ?", "%"+title+"%").Find(&posts).Error
 
 	return posts, err
 }

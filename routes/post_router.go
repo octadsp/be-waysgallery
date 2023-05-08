@@ -20,4 +20,5 @@ func PostRoutes(e *echo.Group) {
 	e.PATCH("/post/:id", middleware.UploadImage(h.UpdatePost))
 	e.DELETE("/post/:id", middleware.UploadImage(h.DeletePost))
 	e.GET("/user/:userID/posts", h.GetPostByUserID)
+	e.GET("/posts/search", h.FilterPostsByTitle)
 }
