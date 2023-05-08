@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"waysgallery/database"
 	"waysgallery/pkg/mysql"
@@ -30,6 +31,10 @@ func main() {
 
 	routes.RouteInit(e.Group("/api/v1"))
 
-	fmt.Println("server running localhost:5000")
-	e.Logger.Fatal(e.Start("localhost:5000"))
+	e.Static("/uploads", "./uploads")
+
+	var PORT = os.Getenv("PORT")
+
+	fmt.Println("server running di port :" + PORT)
+	e.Logger.Fatal(e.Start(":" + PORT))
 }
