@@ -23,9 +23,9 @@ type OrderResponse struct {
 	StartDate   time.Time    `json:"start_date"`
 	EndDate     time.Time    `json:"end_date"`
 	Price       int          `json:"price"`
-	UserID      int          `json:"user_id"`
+	UserID      int          `json:"orderBy"`
 	User        UserResponse `json:"user" gorm:"foreignKey:UserID"`
-	OrderToID   int          `json:"order_to_id"`
+	OrderToID   int          `json:"orderTo"`
 	OrderTo     UserResponse `json:"order_to" gorm:"foreignKey:OrderToID"`
 }
 
