@@ -10,7 +10,7 @@ import (
 var SecretKey = os.Getenv("SECRET_KEY")
 
 func GenerateToken(claims *jwt.MapClaims) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims) // HS256 adalah algoritma tanda tangan HMAC dengan hash SHA-256.
 	webtoken, err := token.SignedString([]byte(SecretKey))
 	if err != nil {
 		return "", err

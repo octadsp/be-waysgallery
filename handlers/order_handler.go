@@ -91,8 +91,8 @@ func (h *handlerOrder) AddOrderByUserToUser(c echo.Context) error {
 	}
 
 	price, _ := strconv.Atoi(c.FormValue("price"))
-	orderTo, _ := strconv.Atoi(c.Param("orderTo"))
-	orderBy, _ := strconv.Atoi(c.Param("orderBy"))
+	orderTo, _ := strconv.Atoi(c.Param("byID"))
+	orderBy, _ := strconv.Atoi(c.Param("toID"))
 
 	order := models.Order{
 		Title:       request.Title,
