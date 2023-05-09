@@ -13,7 +13,7 @@ type OrderRepository interface {
 	UpdateOrder(order models.Order) (models.Order, error)
 	DeleteOrder(order models.Order, ID int) (models.Order, error)
 
-	AddOrderByUserToUser(order models.Order, byID int, toID int) (models.Order, error)
+	AddOrderByUserToUser(order models.Order, byID int, toID int) (models.User, error)
 }
 
 func RepositoryOrder(db *gorm.DB) *repository {
@@ -40,10 +40,24 @@ func (r *repository) AddOrder(order models.Order) (models.Order, error) {
 	return order, err
 }
 
-func (r *repository) AddOrderByUserToUser(order models.Order, byID int, toID int) (models.Order, error) {
-	err := r.db.Preload("User").Where("user_id = ? AND order_to_id = ?", byID, toID).Create(&order).Error
+func (r *repository) AddOrderByUserToUser(order models.Order, byID int, toID int) (models.User, error) {
+	var userFrom, userTo models.User
+	if err := r.db.First(&userFrom, byID).Error; err != nil {
+		return models.User{}, err
+	}
 
-	return order, err
+	if err := r.db.First(&userTo, toID).Error; err != nil {
+		return models.User{}, err
+	}
+
+	order.UserID = userFrom.ID
+	order.OrderToID = userTo.ID
+
+	if err := r.db.Preload("User").Create(&order).Error; err != nil {
+		return models.User{}, err
+	}
+
+	return userFrom, nil
 }
 
 func (r *repository) UpdateOrder(order models.Order) (models.Order, error) {
