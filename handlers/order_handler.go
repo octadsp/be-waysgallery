@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"time"
 	orderdto "waysgallery/dto/order"
 	dto "waysgallery/dto/result"
 	"waysgallery/models"
@@ -91,14 +92,17 @@ func (h *handlerOrder) AddOrderByUserToUser(c echo.Context) error {
 	}
 
 	price, _ := strconv.Atoi(c.FormValue("price"))
+
+	start_date, _ := time.Parse("2006-01-02", c.FormValue("start_date"))
+	end_date, _ := time.Parse("2006-01-02", c.FormValue("end_date"))
 	orderTo, _ := strconv.Atoi(c.Param("byID"))
 	orderBy, _ := strconv.Atoi(c.Param("toID"))
 
 	order := models.Order{
 		Title:       request.Title,
 		Description: request.Description,
-		StartDate:   request.StartDate,
-		EndDate:     request.EndDate,
+		StartDate:   start_date,
+		EndDate:     end_date,
 		Price:       price,
 	}
 	data, err := h.OrderRepository.AddOrderByUserToUser(order, orderBy, orderTo)
