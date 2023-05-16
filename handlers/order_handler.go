@@ -1,7 +1,10 @@
 package handlers
 
 import (
+	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 	orderdto "waysgallery/dto/order"
@@ -12,14 +15,21 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
+	"github.com/midtrans/midtrans-go"
+	"github.com/midtrans/midtrans-go/snap"
+	"gopkg.in/gomail.v2"
 )
 
 type handlerOrder struct {
 	OrderRepository repository.OrderRepository
+	UserRepository  repository.UserRepository
 }
 
-func HandlerOrder(OrderRepository repository.OrderRepository) *handlerOrder {
-	return &handlerOrder{OrderRepository}
+func HandlerOrder(OrderRepository repository.OrderRepository, UserRepository repository.UserRepository) *handlerOrder {
+	return &handlerOrder{
+		OrderRepository: OrderRepository,
+		UserRepository:  UserRepository,
+	}
 }
 
 func (h *handlerOrder) FindOrders(c echo.Context) error {
@@ -42,10 +52,17 @@ func (h *handlerOrder) GetOrder(c echo.Context) error {
 	return c.JSON(http.StatusOK, dto.SuccessResult{Status: http.StatusOK, Data: order})
 }
 
-func (h *handlerOrder) AddOrder(c echo.Context) error {
-	request := new(orderdto.OrderRequest)
-	if err := c.Bind(request); err != nil {
-		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
+func (h *handlerOrder) CreateOrder(c echo.Context) error {
+	StartDateInput, _ := time.Parse("2006-01-02", c.FormValue("start_date"))
+	EndDateInput, _ := time.Parse("2006-01-02", c.FormValue("end_date"))
+	price, _ := strconv.Atoi(c.FormValue("price"))
+
+	request := orderdto.OrderRequest{
+		Title:       c.FormValue("title"),
+		Description: c.FormValue("description"),
+		StartDate:   StartDateInput,
+		EndDate:     EndDateInput,
+		Price:       price,
 	}
 
 	validation := validator.New()
@@ -54,125 +71,189 @@ func (h *handlerOrder) AddOrder(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
 	}
 
-	price, _ := strconv.Atoi(c.FormValue("price"))
+	id, _ := strconv.Atoi(c.Param("vendor_id"))
 	userLogin := c.Get("userLogin")
 	userId := userLogin.(jwt.MapClaims)["id"].(float64)
-	// user_id, _ := strconv.Atoi(c.FormValue("user_id"))
-	order_to_id, _ := strconv.Atoi(c.Param("order_to_id"))
+
+	var orderIsMatch = false
+	var orderId int
+	for !orderIsMatch {
+		orderId = int(time.Now().Unix())
+		orderData, _ := h.OrderRepository.GetOrder(orderId)
+		if orderData.ID == 0 {
+			orderIsMatch = true
+		}
+	}
 
 	order := models.Order{
+		ID:          orderId,
 		Title:       request.Title,
 		Description: request.Description,
 		StartDate:   request.StartDate,
 		EndDate:     request.EndDate,
-		Price:       price,
+		Price:       request.Price,
+		VendorID:    id,
+		ClientID:    int(userId),
 		UserID:      int(userId),
-		OrderToID:   order_to_id,
+		Status:      "cancel",
 	}
-
-	data, err := h.OrderRepository.AddOrder(order)
-
+	data, err := h.OrderRepository.CreateOrder(order)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Status: http.StatusInternalServerError, Message: err.Error()})
+	}
+	user, err := h.UserRepository.GetUser(int(userId))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Status: http.StatusInternalServerError, Message: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, dto.SuccessResult{Status: http.StatusOK, Data: data})
+	// return c.JSON(http.StatusOK, dto.SuccessResult{Status: http.StatusOK, Message: "Order data created successfully", Data: convertResponseOrder(data)})
+
+	var s = snap.Client{}
+	s.New(os.Getenv("SERVER_KEY"), midtrans.Sandbox)
+
+	req := &snap.Request{
+		TransactionDetails: midtrans.TransactionDetails{
+			OrderID:  strconv.Itoa(data.ID),
+			GrossAmt: int64(data.Price),
+		},
+		CreditCard: &snap.CreditCardDetails{
+			Secure: true,
+		},
+		CustomerDetail: &midtrans.CustomerDetails{
+			FName: user.FullName,
+			Email: user.Email,
+		},
+	}
+
+	snapResp, _ := s.CreateTransaction(req)
+
+	return c.JSON(http.StatusOK, dto.SuccessResult{Status: http.StatusOK, Data: snapResp})
 }
 
-func (h *handlerOrder) AddOrderByUserToUser(c echo.Context) error {
-	request := new(orderdto.OrderRequest)
-	if err := c.Bind(request); err != nil {
-		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
-	}
-
-	validation := validator.New()
-	err := validation.Struct(request)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
-	}
-
-	price, _ := strconv.Atoi(c.FormValue("price"))
-
-	start_date, _ := time.Parse("2006-01-02", c.FormValue("start_date"))
-	end_date, _ := time.Parse("2006-01-02", c.FormValue("end_date"))
-	orderTo, _ := strconv.Atoi(c.Param("byID"))
-	orderBy, _ := strconv.Atoi(c.Param("toID"))
-
-	order := models.Order{
-		Title:       request.Title,
-		Description: request.Description,
-		StartDate:   start_date,
-		EndDate:     end_date,
-		Price:       price,
-	}
-	data, err := h.OrderRepository.AddOrderByUserToUser(order, orderBy, orderTo)
-
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Status: http.StatusInternalServerError, Message: err.Error()})
-	}
-
-	return c.JSON(http.StatusOK, dto.SuccessResult{Status: http.StatusOK, Data: data})
-}
-
-func (h *handlerOrder) UpdateOrder(c echo.Context) error {
+func (h *handlerOrder) UpdateOrderStatus(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	request := new(orderdto.OrderRequest)
-	if err := c.Bind(request); err != nil {
+	request := new(orderdto.OrderStatusRequest)
+	if err := c.Bind(&request); err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
 	}
-
-	order, err := h.OrderRepository.GetOrder(id)
-	StartDate := request.StartDate
-	EndDate := request.EndDate
-	formatStartDate := StartDate.Format("02/01/2006")
-	formatEndDate := EndDate.Format("02/01/2006")
-
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
-	}
-
-	if request.Title != "" {
-		order.Title = request.Title
-	}
-
-	if request.Description != "" {
-		order.Description = request.Description
-	}
-
-	if formatStartDate != "" {
-		order.StartDate = request.StartDate
-	}
-
-	if formatEndDate != "" {
-		order.UserID = request.UserID
-	}
-
-	if request.Price != 0 {
-		order.Price = request.Price
-	}
-
-	data, err := h.OrderRepository.UpdateOrder(order)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Status: http.StatusInternalServerError, Message: err.Error()})
-	}
-
-	return c.JSON(http.StatusOK, dto.SuccessResult{Status: http.StatusOK, Data: data})
-}
-
-func (h *handlerOrder) DeleteOrder(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
 
 	order, err := h.OrderRepository.GetOrder(id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
 	}
 
-	data, err := h.OrderRepository.DeleteOrder(order, id)
+	if request.Status != "" {
+		order.Status = request.Status
+	}
 
+	order.UpdatedAt = time.Now()
+
+	data, err := h.OrderRepository.UpdateOrderStatus(order)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Status: http.StatusInternalServerError, Message: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, dto.SuccessResult{Status: http.StatusOK, Data: data})
+	return c.JSON(http.StatusOK, dto.SuccessResult{Status: http.StatusOK, Data: convertResponseOrder(data)})
+}
+
+func (h *handlerOrder) Notification(c echo.Context) error {
+	var notificationPayload map[string]interface{}
+
+	if err := c.Bind(&notificationPayload); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Status: http.StatusBadRequest, Message: err.Error()})
+	}
+
+	transactionStatus := notificationPayload["transaction_status"].(string)
+	fraudStatus := notificationPayload["fraud_status"].(string)
+	orderId := notificationPayload["order_id"].(string)
+
+	order_id, _ := strconv.Atoi(orderId)
+	order, _ := h.OrderRepository.GetOrder(order_id)
+	if transactionStatus == "capture" {
+		if fraudStatus == "challenge" {
+			h.OrderRepository.UpdateOrder("cancel", order_id)
+		} else if fraudStatus == "accept" {
+			SendMail("waiting", order)
+			h.OrderRepository.UpdateOrder("waiting", order_id)
+		}
+	} else if transactionStatus == "settlement" {
+		SendMail("waiting", order)
+		h.OrderRepository.UpdateOrder("waiting", order_id)
+	} else if transactionStatus == "deny" {
+		h.OrderRepository.UpdateOrder("cancel", order_id)
+	} else if transactionStatus == "cancel" || transactionStatus == "expire" {
+		h.OrderRepository.UpdateOrder("cancel", order_id)
+	} else if transactionStatus == "pending" {
+		h.OrderRepository.UpdateOrder("cancel", order_id)
+	}
+
+	return c.JSON(http.StatusOK, dto.SuccessResult{Status: http.StatusOK, Data: notificationPayload})
+}
+
+func SendMail(status string, order models.Order) {
+
+	if status != order.Status && (status == "waiting") {
+		var CONFIG_SMTP_HOST = "smtp.gmail.com"
+		var CONFIG_SMTP_PORT = 587
+		var CONFIG_SENDER_NAME = "WaysGallery <waysgallery.admin@gmail.com>"
+		var CONFIG_AUTH_EMAIL = os.Getenv("EMAIL_SYSTEM")
+		var CONFIG_AUTH_PASSWORD = os.Getenv("PASSWORD_SYSTEM")
+
+		var price = strconv.Itoa(order.Price)
+
+		mailer := gomail.NewMessage()
+		mailer.SetHeader("From", CONFIG_SENDER_NAME)
+		mailer.SetHeader("To", order.User.Email)
+		mailer.SetHeader("Subject", "WaysGallery Order Payment")
+		mailer.SetBody("text/html", fmt.Sprintf(`<!DOCTYPE html>
+    <html lang="en">
+      <head>
+      <meta charset="UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Document</title>
+      </head>
+      <body>
+      <h2>Product Payment</h2>
+      <ul style="list-style-type:none;">
+				<li>Title : %s</li>
+				<li>Description : %s</li>
+				<li>Start Date : %s</li>
+				<li>End Date : %s</li>
+				<li>Price : %s</li>
+				<li>Status : %s approvement from vendor</li>
+      </ul>
+			<h4>&copy; 2023. <a href="https://waysgallery.vercel.app">WaysGallery</a>.</h4>
+      </body>
+    </html>`, order.Title, order.Description, order.StartDate, order.EndDate, price, status))
+
+		dialer := gomail.NewDialer(
+			CONFIG_SMTP_HOST,
+			CONFIG_SMTP_PORT,
+			CONFIG_AUTH_EMAIL,
+			CONFIG_AUTH_PASSWORD,
+		)
+
+		err := dialer.DialAndSend(mailer)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		log.Println("Mail sent! to " + CONFIG_AUTH_EMAIL)
+	}
+}
+
+func convertResponseOrder(u models.Order) orderdto.OrderResponse {
+	return orderdto.OrderResponse{
+		ID:          u.ID,
+		Title:       u.Title,
+		Description: u.Description,
+		StartDate:   u.StartDate,
+		EndDate:     u.EndDate,
+		Price:       u.Price,
+		VendorID:    u.VendorID,
+		ClientID:    u.ClientID,
+		Status:      u.Status,
+	}
 }

@@ -9,7 +9,7 @@ type User struct {
 	Avatar   string            `json:"image"`
 	Posts    []PostResponse    `json:"posts" gorm:"foreignKey:UserID"`
 	Arts     []ArtUserResponse `json:"arts" gorm:"foreignKey:UserID"`
-	Orders   []OrderResponse   `json:"orders" gorm:"foreignKey:UserID"`
+	Orders   []OrderUserResponse   `json:"orders" gorm:"foreignKey:UserID"`
 }
 
 type UserResponse struct {
@@ -20,7 +20,7 @@ type UserResponse struct {
 	Avatar   string            `json:"image"`
 	Posts    []PostResponse    `json:"posts" gorm:"foreignKey:UserID"`
 	Arts     []ArtUserResponse `json:"arts" gorm:"foreignKey:UserID"`
-	Orders   []OrderResponse   `json:"orders" gorm:"foreignKey:UserID"`
+	Orders   []OrderUserResponse   `json:"orders" gorm:"foreignKey:UserID"`
 }
 
 func (UserResponse) TableName() string {

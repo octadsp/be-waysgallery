@@ -5,11 +5,13 @@ import (
 )
 
 type OrderResponse struct {
-	Title       string       `json:"title"`
-	Description string       `json:"description"`
-	StartDate   time.Time    `json:"start_date"`
-	EndDate     time.Time    `json:"end_date"`
-	Price       int          `json:"price"`
-	UserID      int          `json:"user_id"`
-	OrderToID   int          `json:"order_to_id"`
+	ID          int       `json:"id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	StartDate   time.Time `json:"start_date"`
+	EndDate     time.Time `json:"end_date"`
+	Price       int       `json:"price"`
+	VendorID    int       `json:"vendor_id"`
+	ClientID    int       `json:"client_id"`
+	Status      string    `json:"status"`
 }

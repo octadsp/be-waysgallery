@@ -2,6 +2,7 @@ package routes
 
 import (
 	"waysgallery/handlers"
+	"waysgallery/pkg/middleware"
 	"waysgallery/pkg/mysql"
 	"waysgallery/repositories"
 
@@ -10,14 +11,12 @@ import (
 
 func OrderRoutes(e *echo.Group) {
 	orderRepository := repositories.RepositoryOrder(mysql.DB)
+	userRepository := repositories.RepositoryUser(mysql.DB)
+	h := handlers.HandlerOrder(orderRepository, userRepository)
 
-	h := handlers.HandlerOrder(orderRepository)
-
-	e.GET("/orders", h.FindOrders)
-	e.GET("/order/:id", h.GetOrder)
-	e.POST("/order", h.AddOrder)
-	e.PATCH("/order/:id", h.UpdateOrder)
-	e.DELETE("/order/:id", h.DeleteOrder)
-
-	e.POST("/order/:byID/user/:toID", h.AddOrderByUserToUser)
+	e.GET("/orders", middleware.Auth(h.FindOrders))
+	e.GET("/order/:id", middleware.Auth(h.GetOrder))
+	e.POST("/order/:vendor_id", middleware.Auth(h.CreateOrder))
+	e.PATCH("/order/:id", middleware.Auth(h.UpdateOrderStatus))
+	e.POST("/notification", h.Notification)
 }
